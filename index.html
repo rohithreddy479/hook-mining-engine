@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hook Mining Engine</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --border: #e2e8f0;
+            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+            line-height: 1.6;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            color: var(--text-dark);
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.125rem;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        input {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-dark);
+        }
+
+        input:focus {
+            outline: none;
+        }
+
+        button.primary-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.75rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button.primary-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #loading {
+            text-align: center;
+            display: none;
+            margin: 3rem 0;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 1.125rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(37, 99, 235, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .cards {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .top-badge {
+            position: absolute;
+            top: -12px;
+            left: 1.5rem;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .hook-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin: 0;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .score-badge {
+            background-color: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #fed7aa;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .tags-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .category-curiosity {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .category-question {
+            background-color: #dcfce7;
+            color: #15803d;
+        }
+
+        .category-bold {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        
+        .category-default {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .copy-btn:hover {
+            background: #f8fafc;
+            color: var(--text-dark);
+            border-color: #cbd5e1;
+        }
+
+        .reason {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin: 0;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--border);
+        }
+
+        .error {
+            color: #b91c1c;
+            text-align: center;
+            background: #fef2f2;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            display: none;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Hook Mining Engine</h1>
+        <p class="subtitle">Discover highly-converting, scroll-stopping hooks.</p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="niche-input" placeholder="What niche are you targeting? (e.g. AI, fitness)...">
+        <button id="analyze-btn" class="primary-btn" onclick="fetchHooks()">Analyze</button>
+    </div>
+
+    <div id="loading">
+        <span class="spinner"></span> Analyzing viral hooks...
+    </div>
+    
+    <div id="error" class="error"></div>
+    <div id="results" class="cards"></div>
+
+    <script>
+        async function fetchHooks() {
+            const nicheInput = document.getElementById('niche-input').value.trim();
+            const resultsContainer = document.getElementById('results');
+            const loading = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const btn = document.getElementById('analyze-btn');
+
+            if (!nicheInput) return;
+
+            // Reset UI
+            resultsContainer.innerHTML = '';
+            errorDiv.style.display = 'none';
+            loading.style.display = 'block';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/hooks?niche=${encodeURIComponent(nicheInput)}`);
+                if (!response.ok) {
+                    throw new Error(`Server error (${response.status})`);
+                }
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+
+                if (data.hooks && data.hooks.length > 0) {
+                    // Ranked hooks are already sorted by backend, highest first.
+                    let highestScore = data.hooks[0].score;
+                    
+                    data.hooks.forEach((item, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        
+                        // Category colors
+                        let catClass = 'category-default';
+                        const catLower = item.category ? item.category.toLowerCase() : '';
+                        if (catLower.includes('curiosity')) catClass = 'category-curiosity';
+                        else if (catLower.includes('question')) catClass = 'category-question';
+                        else if (catLower.includes('bold')) catClass = 'category-bold';
+
+                        // Top hook badge
+                        const isTopHook = (index === 0 && item.score === highestScore);
+                        const badgeHtml = isTopHook ? `<div class="top-badge">Top Hook 🔥</div>` : '';
+
+                        // Escape quotes for the onclick handler
+                        const escapedHook = item.hook.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+
+                        card.innerHTML = `
+                            ${badgeHtml}
+                            <div class="card-header">
+                                <h3 class="hook-text">${item.hook}</h3>
+                                <div class="score-badge">🔥 ${item.score}/10</div>
+                            </div>
+                            <div class="tags-container">
+                                <span class="category-tag ${catClass}">${item.category}</span>
+                                <button class="copy-btn" onclick="copyToClipboard(this, '${escapedHook}')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <p class="reason">${item.reason}</p>
+                        `;
+                        resultsContainer.appendChild(card);
+                    });
+                } else {
+                    errorDiv.textContent = 'No hooks found. Please try another niche.';
+                    errorDiv.style.display = 'block';
+                }
+
+            } catch (error) {
+                loading.style.display = 'none';
+                errorDiv.textContent = `Error fetching hooks: ${error.message}`;
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function copyToClipboard(button, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHtml = button.innerHTML;
+                button.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!';
+                button.style.backgroundColor = '#f0fdf4';
+                button.style.color = '#15803d';
+                button.style.borderColor = '#bbf7d0';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHtml;
+                    button.style.backgroundColor = 'transparent';
+                    button.style.color = 'var(--text-muted)';
+                    button.style.borderColor = 'var(--border)';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('niche-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fetchHooks();
+            }
+        });
+    </script>
+</body>
+</html>
